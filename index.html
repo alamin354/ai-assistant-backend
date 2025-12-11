@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CELL FIXER AR - Mobile Repair Tracking</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: hsl(239, 84%, 67%);
+            --primary-dark: hsl(243, 75%, 59%);
+            --secondary: hsl(189, 94%, 43%);
+            --success: hsl(158, 64%, 52%);
+            --warning: hsl(38, 92%, 50%);
+            --danger: hsl(350, 89%, 60%);
+            --bg-dark: #0a0e1a;
+            --bg-darker: #050810;
+            --card-bg: rgba(20, 30, 48, 0.85);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: rgba(148, 163, 184, 0.12);
+            --glow-primary: rgba(99, 102, 241, 0.4);
+            --glow-secondary: rgba(6, 182, 212, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-darker) 0%, #0d1425 50%, var(--bg-dark) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background with Floating Particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 30%, var(--glow-primary) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, var(--glow-secondary) 0%, transparent 40%),
+                radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.2) 0%, transparent 35%);
+            pointer-events: none;
+            z-index: 0;
+            animation: backgroundPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes backgroundPulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 0.9;
+            }
+        }
+
+        /* Floating Particles */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(2px 2px at 60% 70%, rgba(99, 102, 241, 0.4), transparent),
+                radial-gradient(1px 1px at 50% 50%, rgba(6, 182, 212, 0.3), transparent),
+                radial-gradient(1px 1px at 80% 10%, rgba(255, 255, 255, 0.2), transparent),
+                radial-gradient(2px 2px at 90% 60%, rgba(16, 185, 129, 0.3), transparent);
+            background-size: 200% 200%;
+            animation: particleFloat 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes particleFloat {
+
+            0%,
+            100% {
+                background-position: 0% 0%;
+            }
+
+            50% {
+                background-position: 100% 100%;
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header with Animation */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 20px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--success));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            animation: gradientShift 5s ease infinite;
+            text-shadow: 0 0 30px var(--glow-primary);
+            filter: drop-shadow(0 0 20px var(--glow-primary));
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Enhanced Cards with Glassmorphism */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            animation: cardSlideIn 0.6s ease-out;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes cardSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+            transition: left 0.8s ease;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 12px 48px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(99, 102, 241, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--text-primary), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            padding-bottom: 12px;
+        }
+
+        .card-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            border-radius: 2px;
+            animation: expandWidth 0.8s ease-out 0.3s both;
+        }
+
+        @keyframes expandWidth {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: 50px;
+            }
+        }
+
+        /* Form Elements with Enhanced Focus */
+        .form-group {
+            margin-bottom: 24px;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+            transition: color 0.3s ease;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 16px 18px;
+            background: rgba(10, 14, 26, 0.7);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(10, 14, 26, 0.9);
+            box-shadow:
+                0 0 0 4px rgba(99, 102, 241, 0.15),
+                0 8px 16px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        input:focus+label,
+        select:focus+label,
+        textarea:focus+label {
+            color: var(--primary);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 110px;
+        }
+
+        /* Premium Buttons with Ripple Effect */
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.3px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.7s ease;
+        }
+
+        .btn:hover::after {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), #0891b2);
+            color: white;
+            margin-top: 12px;
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 32px rgba(6, 182, 212, 0.5);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #e11d48);
+            color: white;
+            box-shadow: 0 4px 20px rgba(244, 63, 94, 0.4);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 32px rgba(244, 63, 94, 0.5);
+        }
+
+        .btn-small {
+            padding: 12px 18px;
+            font-size: 14px;
+            width: auto;
+            display: inline-block;
+            margin-right: 8px;
+            margin-top: 8px;
+        }
+
+        /* Animated Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: capitalize;
+            animation: badgePulse 2s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes badgePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .status-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: badgeShine 3s ease-in-out infinite;
+        }
+
+        @keyframes badgeShine {
+            0% {
+                left: -100%;
+            }
+
+            50%,
+            100% {
+                left: 100%;
+            }
+        }
+
+        .status-received {
+            background: rgba(99, 102, 241, 0.25);
+            color: var(--primary);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .status-diagnosing {
+            background: rgba(245, 158, 11, 0.25);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .status-repairing {
+            background: rgba(6, 182, 212, 0.25);
+            color: var(--secondary);
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.25);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .status-delivered {
+            background: rgba(34, 197, 94, 0.25);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Enhanced Job List Items */
+        .job-item {
+            background: rgba(10, 14, 26, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 14px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: jobItemSlide 0.5s ease-out;
+        }
+
+        @keyframes jobItemSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .job-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .job-item:hover::before {
+            opacity: 1;
+        }
+
+        .job-item:hover {
+            transform: translateX(8px);
+            background: rgba(10, 14, 26, 0.7);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .job-item:active {
+            transform: scale(0.98) translateX(8px);
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .job-id {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .job-info {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .job-info strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .job-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        /* Animated Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(10, 14, 26, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: statCardPop 0.6s ease-out;
+        }
+
+        @keyframes statCardPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: numberCount 1s ease-out;
+        }
+
+        @keyframes numberCount {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Enhanced Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 35px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary), var(--success));
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 28px;
+            animation: timelineFade 0.6s ease-out;
+        }
+
+        @keyframes timelineFade {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -29px;
+            top: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 4px solid var(--bg-dark);
+            z-index: 1;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+        }
+
+        .timeline-item.active::before {
+            background: var(--success);
+            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.2);
+            animation: timelinePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes timelinePulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
+            }
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .timeline-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Enhanced Loading Spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.08);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            margin: 24px auto;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Hidden Class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Enhanced Alert Messages */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            font-weight: 500;
+            animation: alertSlide 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes alertSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.18);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+        }
+
+        .alert-success::before {
+            background: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(244, 63, 94, 0.18);
+            color: var(--danger);
+            border: 1px solid rgba(244, 63, 94, 0.35);
+            box-shadow: 0 4px 16px rgba(244, 63, 94, 0.2);
+        }
+
+        .alert-error::before {
+            background: var(--danger);
+        }
+
+        .alert-info {
+            background: rgba(6, 182, 212, 0.18);
+            color: var(--secondary);
+            border: 1px solid rgba(6, 182, 212, 0.35);
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.2);
+        }
+
+        .alert-info::before {
+            background: var(--secondary);
+        }
+
+        /* Enhanced Search Box */
+        .search-box {
+            position: relative;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .search-box input {
+            padding-left: 48px;
+            transition: all 0.4s ease;
+        }
+
+        .search-box input:focus {
+            padding-left: 52px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus~.search-icon {
+            color: var(--primary);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .empty-state-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+            opacity: 0.4;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Enhanced Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 28px;
+            max-width: 460px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            animation: modalSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--danger);
+            border-color: rgba(244, 63, 94, 0.3);
+            transform: rotate(90deg);
+        }
+
+        /* Enhanced Logout Button */
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(244, 63, 94, 0.2);
+        }
+
+        .logout-btn:hover {
+            background: rgba(244, 63, 94, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(244, 63, 94, 0.3);
+        }
+
+        .logout-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+
+        /* Responsive */
+        @media (max-width: 360px) {
+            .container {
+                padding: 16px;
+            }
+
+            .card {
+                padding: 22px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .logo {
+                font-size: 30px;
+            }
+        }
+
+        /* File Input Styling */
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(10, 14, 26, 0.7);
+            border: 1.5px dashed var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:hover {
+            border-color: var(--primary);
+            background: rgba(10, 14, 26, 0.9);
+        }
+
+        .file-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Image Preview */
+        .image-preview {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .preview-img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .preview-img:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Repair Images Gallery */
+        .repair-images {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .repair-image {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 14px;
+            border: 2px solid var(--success);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            animation: imageSlideIn 0.5s ease-out;
+        }
+
+        @keyframes imageSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .repair-image:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+            z-index: 10;
+        }
+
+        .repair-images-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--success);
+            margin-top: 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .repair-images-label::before {
+            content: '📸';
+            font-size: 18px;
+        }
+
+        /* Not Repairable Status */
+        .status-not_repairable {
+            background: rgba(120, 113, 108, 0.25);
+            color: #a8a29e;
+            border: 1px solid rgba(120, 113, 108, 0.4);
+            box-shadow: 0 0 20px rgba(120, 113, 108, 0.3);
+        }
+
+        /* Image Lightbox Modal */
+        .image-lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        .lightbox-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            position: relative;
+            animation: imageZoomIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes imageZoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            background: rgba(244, 63, 94, 0.2);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            color: var(--danger);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .lightbox-close:hover {
+            background: rgba(244, 63, 94, 0.4);
+            transform: rotate(90deg);
+        }
+
+        /* PhonePe Payment Button */
+        .payment-section {
+            margin-top: 24px;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .payment-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .payment-title::before {
+            content: '💳';
+            font-size: 20px;
+        }
+
+        .btn-phonepe {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #5f259f, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(95, 37, 159, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-phonepe::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .btn-phonepe:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-phonepe:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(95, 37, 159, 0.6);
+        }
+
+        .btn-phonepe:active {
+            transform: translateY(-1px);
+        }
+
+        .phonepe-icon {
+            font-size: 20px;
+        }
+
+        .payment-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 8px;
+            opacity: 0.8;
+        }
+
+        /* Quick Cost Presets */
+        .cost-presets {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .cost-preset-btn {
+            padding: 8px 16px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .cost-preset-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .cost-preset-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px 20px;
+            margin-top: 40px;
+            position: relative;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            border-radius: 2px;
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .footer-brand {
+            font-size: 16px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+            animation: fadeIn 1s ease-out 0.2s both;
+        }
+
+        .footer-credit {
+            font-size: 12px;
+            color: var(--text-secondary);
+            opacity: 0.7;
+            animation: fadeIn 1s ease-out 0.4s both;
+        }
+
+        .footer-credit strong {
+            background: linear-gradient(135deg, var(--success), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Login View -->
+        <div id="loginView">
+            <div class="header">
+                <div class="logo">📱 CELL FIXER AR</div>
+                <div class="subtitle">Professional Mobile Repair Service</div>
+            </div>
+
+            <div class="card" id="adminLoginCard" style="display: none;">
+                <div class="card-title">Admin Login</div>
+                <div id="loginAlert"></div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="loginUsername" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Track Your Repair</div>
+                <form id="trackingForm">
+                    <div class="form-group">
+                        <label>Enter Tracking ID</label>
+                        <input type="text" id="trackingId" placeholder="e.g., RP-A7X2K" required>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">Track Status</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminView" class="hidden">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+
+            <div class="header">
+                <div class="logo">📱 CELL FIXER AR</div>
+                <div class="subtitle">Admin Dashboard</div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalJobs">0</div>
+                    <div class="stat-label">Total Jobs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeJobs">0</div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="completedJobs">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="deliveredJobs">0</div>
+                    <div class="stat-label">Delivered</div>
+                </div>
+            </div>
+
+            <!-- Add Job Button -->
+            <button class="btn btn-success" onclick="showAddJobModal()">+ Add New Repair Job</button>
+
+            <!-- Search -->
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search by name, phone, or tracking ID..."
+                    oninput="filterJobs()">
+            </div>
+
+            <!-- Jobs List -->
+            <div class="card">
+                <div class="card-title">Repair Jobs</div>
+                <div id="jobsList"></div>
+            </div>
+        </div>
+
+        <!-- Customer Tracking View -->
+        <div id="trackingView" class="hidden">
+            <div class="header">
+                <div class="logo">📱 CELL FIXER AR</div>
+                <div class="subtitle">Track Your Repair Status</div>
+            </div>
+
+            <div class="card">
+                <div id="trackingResult"></div>
+                <button class="btn btn-primary" onclick="backToHome()">Back to Home</button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">Professional Mobile Repair Service</div>
+            <div class="footer-brand">📱 CELL FIXER AR</div>
+            <div class="footer-credit">Made with ❤️ by <strong>Arish Sk</strong></div>
+        </div>
+    </div>
+
+    <!-- Add Job Modal -->
+    <div id="addJobModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Add New Repair Job</div>
+                <button class="close-btn" onclick="closeAddJobModal()">×</button>
+            </div>
+            <form id="addJobForm">
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number (with country code)</label>
+                    <input type="tel" id="customerPhone" placeholder="+919876543210" required>
+                </div>
+                <div class="form-group">
+                    <label>Device Brand</label>
+                    <select id="deviceBrand" required>
+                        <option value="">Select Brand</option>
+                        <option value="Samsung">Samsung</option>
+                        <option value="Apple">Apple</option>
+                        <option value="Xiaomi">Xiaomi</option>
+                        <option value="Vivo">Vivo</option>
+                        <option value="OPPO">OPPO</option>
+                        <option value="OnePlus">OnePlus</option>
+                        <option value="Realme">Realme</option>
+                        <option value="Motorola">Motorola</option>
+                        <option value="Nokia">Nokia</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Device Model</label>
+                    <input type="text" id="deviceModel" placeholder="e.g., Galaxy S21" required>
+                </div>
+                <div class="form-group">
+                    <label>Issue Description</label>
+                    <textarea id="issueDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Estimated Cost (₹)</label>
+                    <input type="number" id="estimatedCost" min="0" step="1" placeholder="e.g., 300, 350, 320">
+                    <div class="cost-presets">
+                        <button type="button" class="cost-preset-btn" onclick="setCost(250)">₹250</button>
+                        <button type="button" class="cost-preset-btn" onclick="setCost(300)">₹300</button>
+                        <button type="button" class="cost-preset-btn" onclick="setCost(350)">₹350</button>
+                        <button type="button" class="cost-preset-btn" onclick="setCost(500)">₹500</button>
+                        <button type="button" class="cost-preset-btn" onclick="setCost(750)">₹750</button>
+                        <button type="button" class="cost-preset-btn" onclick="setCost(1000)">₹1000</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Create Job</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Job Modal -->
+    <div id="editJobModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Update Job Status</div>
+                <button class="close-btn" onclick="closeEditJobModal()">×</button>
+            </div>
+            <form id="editJobForm">
+                <input type="hidden" id="editJobId">
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="editStatus" required onchange="handleStatusChange()">
+                        <option value="received">Received</option>
+                        <option value="diagnosing">Diagnosing</option>
+                        <option value="repairing">Repairing</option>
+                        <option value="completed">Completed</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="not_repairable">Not Repairable</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Actual Cost (₹)</label>
+                    <input type="number" id="editActualCost" min="0" step="1" placeholder="e.g., 300, 350, 400">
+                    <div class="cost-presets">
+                        <button type="button" class="cost-preset-btn" onclick="setActualCost(200)">₹200</button>
+                        <button type="button" class="cost-preset-btn" onclick="setActualCost(300)">₹300</button>
+                        <button type="button" class="cost-preset-btn" onclick="setActualCost(350)">₹350</button>
+                        <button type="button" class="cost-preset-btn" onclick="setActualCost(500)">₹500</button>
+                        <button type="button" class="cost-preset-btn" onclick="setActualCost(750)">₹750</button>
+                        <button type="button" class="cost-preset-btn" onclick="setActualCost(1000)">₹1000</button>
+                    </div>
+                </div>
+                <div class="form-group" id="imageUploadSection" style="display: none;">
+                    <label>Upload Repair Images (2 images)</label>
+                    <input type="file" id="repairImage1" accept="image/*" class="file-input">
+                    <input type="file" id="repairImage2" accept="image/*" class="file-input" style="margin-top: 10px;">
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="editNotes"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Update Job</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURATION ====================
+        // TODO: Replace with your Supabase credentials
+        const SUPABASE_URL = 'https://bwujbngwxjwizxjskcal.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_eX5ei8w6RH_qYarAZPoBkQ_cTBR29yq';
+        const WHATSAPP_NUMBER = '9002031631'; // e.g., +919876543210
+
+        // Initialize Supabase client
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (error) {
+            console.error('Supabase initialization error:', error);
+        }
+
+        // ==================== STATE MANAGEMENT ====================
+        let currentUser = null;
+        let allJobs = [];
+        let currentEditJob = null;
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function () {
+            checkAuth();
+            setupEventListeners();
+            checkTrackingParam();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('trackingForm').addEventListener('submit', handleTracking);
+            document.getElementById('addJobForm').addEventListener('submit', handleAddJob);
+            document.getElementById('editJobForm').addEventListener('submit', handleEditJob);
+        }
+
+        function checkTrackingParam() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const trackId = urlParams.get('track');
+            if (trackId) {
+                document.getElementById('trackingId').value = trackId;
+                handleTracking(new Event('submit'));
+            }
+        }
+
+        // ==================== HELPER FUNCTIONS ====================
+        function setCost(amount) {
+            document.getElementById('estimatedCost').value = amount;
+        }
+
+        function setActualCost(amount) {
+            document.getElementById('editActualCost').value = amount;
+        }
+
+        function handleStatusChange() {
+            const status = document.getElementById('editStatus').value;
+            const imageSection = document.getElementById('imageUploadSection');
+
+            // Show image upload section only when status is completed or delivered
+            if (status === 'completed' || status === 'delivered') {
+                imageSection.style.display = 'block';
+            } else {
+                imageSection.style.display = 'none';
+            }
+        }
+
+        // Image preview functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const img1Input = document.getElementById('repairImage1');
+            const img2Input = document.getElementById('repairImage2');
+
+            if (img1Input) {
+                img1Input.addEventListener('change', function (e) {
+                    previewImage(e.target, 'preview1');
+                });
+            }
+
+            if (img2Input) {
+                img2Input.addEventListener('change', function (e) {
+                    previewImage(e.target, 'preview2');
+                });
+            }
+        });
+
+        function previewImage(input, previewId) {
+            const preview = document.getElementById('imagePreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    // Remove old preview if exists
+                    const oldPreview = document.getElementById(previewId);
+                    if (oldPreview) {
+                        oldPreview.remove();
+                    }
+
+                    // Create new preview
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-img';
+                    img.id = previewId;
+                    img.onclick = function () {
+                        window.open(e.target.result, '_blank');
+                    };
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // ==================== AUTHENTICATION ====================
+        function checkAuth() {
+            // Check if admin parameter is in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const isAdminAccess = urlParams.get('admin') === 'true';
+
+            // Show admin login card only if ?admin=true in URL
+            if (isAdminAccess) {
+                document.getElementById('adminLoginCard').style.display = 'block';
+            }
+
+            const user = localStorage.getItem('adminUser');
+            if (user) {
+                currentUser = JSON.parse(user);
+                showAdminView();
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                // Query admin_users table
+                const { data, error } = await supabase
+                    .from('admin_users')
+                    .select('*')
+                    .eq('username', username)
+                    .single();
+
+                if (error) throw error;
+
+                // Simple password check (in production, use proper hashing)
+                if (data && data.password_hash === password) {
+                    currentUser = { id: data.id, username: data.username };
+                    localStorage.setItem('adminUser', JSON.stringify(currentUser));
+                    showAdminView();
+                    showAlert('loginAlert', 'Login successful!', 'success');
+                } else {
+                    showAlert('loginAlert', 'Invalid credentials', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('loginAlert', 'Login failed: ' + error.message, 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminUser');
+            currentUser = null;
+            showLoginView();
+        }
+
+        // ==================== VIEW MANAGEMENT ====================
+        function showLoginView() {
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('adminView').classList.add('hidden');
+            document.getElementById('trackingView').classList.add('hidden');
+        }
+
+        function showAdminView() {
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('adminView').classList.remove('hidden');
+            document.getElementById('trackingView').classList.add('hidden');
+            loadJobs();
+        }
+
+        function showTrackingView() {
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('adminView').classList.add('hidden');
+            document.getElementById('trackingView').classList.remove('hidden');
+        }
+
+        function backToHome() {
+            window.location.href = window.location.pathname;
+        }
+
+        // ==================== JOB MANAGEMENT ====================
+        async function loadJobs() {
+            try {
+                const { data, error } = await supabase
+                    .from('repair_jobs')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allJobs = data || [];
+                updateStats();
+                renderJobs(allJobs);
+            } catch (error) {
+                console.error('Load jobs error:', error);
+                showAlert('jobsList', 'Failed to load jobs: ' + error.message, 'error');
+            }
+        }
+
+        function updateStats() {
+            const total = allJobs.length;
+            const active = allJobs.filter(j => !['completed', 'delivered'].includes(j.status)).length;
+            const completed = allJobs.filter(j => j.status === 'completed').length;
+            const delivered = allJobs.filter(j => j.status === 'delivered').length;
+
+            document.getElementById('totalJobs').textContent = total;
+            document.getElementById('activeJobs').textContent = active;
+            document.getElementById('completedJobs').textContent = completed;
+            document.getElementById('deliveredJobs').textContent = delivered;
+        }
+
+        function renderJobs(jobs) {
+            const container = document.getElementById('jobsList');
+
+            if (jobs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📱</div>
+                        <div>No repair jobs found</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = jobs.map(job => `
+                <div class="job-item">
+                    <div class="job-header">
+                        <div class="job-id">${job.tracking_id}</div>
+                        <span class="status-badge status-${job.status}">${job.status}</span>
+                    </div>
+                    <div class="job-info"><strong>Customer:</strong> ${job.customer_name}</div>
+                    <div class="job-info"><strong>Phone:</strong> ${job.customer_phone}</div>
+                    <div class="job-info"><strong>Device:</strong> ${job.device_brand} ${job.device_model}</div>
+                    <div class="job-info"><strong>Issue:</strong> ${job.issue_description}</div>
+                    ${job.estimated_cost ? `<div class="job-info"><strong>Est. Cost:</strong> ₹${job.estimated_cost}</div>` : ''}
+                    ${job.actual_cost ? `<div class="job-info"><strong>Actual Cost:</strong> ₹${job.actual_cost}</div>` : ''}
+                    <div class="job-actions">
+                        <button class="btn btn-small btn-primary" onclick="editJob('${job.id}')">Update Status</button>
+                        <button class="btn btn-small btn-secondary" onclick="sendWhatsApp('${job.id}')">Send WhatsApp</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteJob('${job.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterJobs() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allJobs.filter(job =>
+                job.customer_name.toLowerCase().includes(search) ||
+                job.customer_phone.includes(search) ||
+                job.tracking_id.toLowerCase().includes(search) ||
+                job.device_brand.toLowerCase().includes(search) ||
+                job.device_model.toLowerCase().includes(search)
+            );
+            renderJobs(filtered);
+        }
+
+        // ==================== ADD JOB ====================
+        function showAddJobModal() {
+            document.getElementById('addJobModal').classList.remove('hidden');
+        }
+
+        function closeAddJobModal() {
+            document.getElementById('addJobModal').classList.add('hidden');
+            document.getElementById('addJobForm').reset();
+        }
+
+        async function handleAddJob(e) {
+            e.preventDefault();
+
+            const trackingId = generateTrackingId();
+            const jobData = {
+                tracking_id: trackingId,
+                customer_name: document.getElementById('customerName').value,
+                customer_phone: document.getElementById('customerPhone').value,
+                device_brand: document.getElementById('deviceBrand').value,
+                device_model: document.getElementById('deviceModel').value,
+                issue_description: document.getElementById('issueDescription').value,
+                estimated_cost: document.getElementById('estimatedCost').value || null,
+                status: 'received',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const { data, error } = await supabase
+                    .from('repair_jobs')
+                    .insert([jobData])
+                    .select();
+
+                if (error) throw error;
+
+                closeAddJobModal();
+                loadJobs();
+
+                // Auto-send WhatsApp message
+                if (data && data[0]) {
+                    setTimeout(() => sendWhatsApp(data[0].id), 500);
+                }
+            } catch (error) {
+                console.error('Add job error:', error);
+                alert('Failed to add job: ' + error.message);
+            }
+        }
+
+        function generateTrackingId() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let id = 'RP-';
+            for (let i = 0; i < 5; i++) {
+                id += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return id;
+        }
+
+        // ==================== EDIT JOB ====================
+        function editJob(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            currentEditJob = job;
+            document.getElementById('editJobId').value = job.id;
+            document.getElementById('editStatus').value = job.status;
+            document.getElementById('editActualCost').value = job.actual_cost || '';
+            document.getElementById('editNotes').value = job.notes || '';
+
+            document.getElementById('editJobModal').classList.remove('hidden');
+        }
+
+        function closeEditJobModal() {
+            document.getElementById('editJobModal').classList.add('hidden');
+            document.getElementById('editJobForm').reset();
+            currentEditJob = null;
+        }
+
+        async function handleEditJob(e) {
+            e.preventDefault();
+
+            const jobId = document.getElementById('editJobId').value;
+            const status = document.getElementById('editStatus').value;
+
+            const updates = {
+                status: status,
+                actual_cost: document.getElementById('editActualCost').value || null,
+                notes: document.getElementById('editNotes').value,
+                updated_at: new Date().toISOString()
+            };
+
+            // Handle image uploads if status is completed or delivered
+            if (status === 'completed' || status === 'delivered') {
+                const img1 = document.getElementById('repairImage1').files[0];
+                const img2 = document.getElementById('repairImage2').files[0];
+
+                if (img1) {
+                    updates.repair_image1 = await fileToBase64(img1);
+                }
+                if (img2) {
+                    updates.repair_image2 = await fileToBase64(img2);
+                }
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('repair_jobs')
+                    .update(updates)
+                    .eq('id', jobId);
+
+                if (error) throw error;
+
+                closeEditJobModal();
+                loadJobs();
+            } catch (error) {
+                console.error('Update job error:', error);
+                alert('Failed to update job: ' + error.message);
+            }
+        }
+
+        // Convert file to base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // ==================== DELETE JOB ====================
+        async function deleteJob(jobId) {
+            if (!confirm('Are you sure you want to delete this job?')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('repair_jobs')
+                    .delete()
+                    .eq('id', jobId);
+
+                if (error) throw error;
+
+                loadJobs();
+            } catch (error) {
+                console.error('Delete job error:', error);
+                alert('Failed to delete job: ' + error.message);
+            }
+        }
+
+        // ==================== WHATSAPP INTEGRATION ====================
+        function sendWhatsApp(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            const trackingUrl = `${window.location.origin}${window.location.pathname}?track=${job.tracking_id}`;
+
+            const messages = {
+                received: `Hello ${job.customer_name}! 👋\n\nYour ${job.device_brand} ${job.device_model} has been received at our repair center.\n\n📱 Tracking ID: ${job.tracking_id}\n🔍 Issue: ${job.issue_description}\n💰 Estimated Cost: ₹${job.estimated_cost || 'TBD'}\n\nTrack your repair status here:\n${trackingUrl}\n\nThank you for choosing us!`,
+
+                diagnosing: `Hi ${job.customer_name}! 🔍\n\nWe are currently diagnosing your ${job.device_brand} ${job.device_model}.\n\n📱 Tracking ID: ${job.tracking_id}\n\nWe'll update you soon with our findings.\n\nTrack status: ${trackingUrl}`,
+
+                repairing: `Hi ${job.customer_name}! 🔧\n\nGood news! We've started repairing your ${job.device_brand} ${job.device_model}.\n\n📱 Tracking ID: ${job.tracking_id}\n💰 Repair Cost: ₹${job.actual_cost || job.estimated_cost || 'TBD'}\n\nTrack status: ${trackingUrl}`,
+
+                completed: `Great news ${job.customer_name}! ✅\n\nYour ${job.device_brand} ${job.device_model} repair is COMPLETED!\n\n📱 Tracking ID: ${job.tracking_id}\n💰 Total Cost: ₹${job.actual_cost || job.estimated_cost}\n\nYour device is ready for pickup. Please visit us at your convenience.\n\nTrack status: ${trackingUrl}`,
+
+                delivered: `Thank you ${job.customer_name}! 🎉\n\nYour ${job.device_brand} ${job.device_model} has been delivered.\n\n📱 Tracking ID: ${job.tracking_id}\n\nWe hope you're satisfied with our service. Please feel free to contact us if you need any assistance.\n\nThank you for choosing us!`
+            };
+
+            const message = messages[job.status] || messages.received;
+            const phone = job.customer_phone.replace(/[^0-9]/g, '');
+            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // ==================== CUSTOMER TRACKING ====================
+        async function handleTracking(e) {
+            e.preventDefault();
+            const trackingId = document.getElementById('trackingId').value.trim().toUpperCase();
+
+            try {
+                const { data, error } = await supabase
+                    .from('repair_jobs')
+                    .select('*')
+                    .eq('tracking_id', trackingId)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    displayTrackingResult(data);
+                    showTrackingView();
+                } else {
+                    showAlert('trackingResult', 'Tracking ID not found', 'error');
+                }
+            } catch (error) {
+                console.error('Tracking error:', error);
+                const resultDiv = document.getElementById('trackingResult');
+                resultDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        Tracking ID not found. Please check and try again.
+                    </div>
+                `;
+                showTrackingView();
+            }
+        }
+
+        function displayTrackingResult(job) {
+            const statuses = ['received', 'diagnosing', 'repairing', 'completed', 'delivered'];
+            const currentIndex = statuses.indexOf(job.status);
+
+            // Handle not repairable status
+            const isNotRepairable = job.status === 'not_repairable';
+            const statusDisplay = isNotRepairable ? 'Not Repairable' : job.status;
+
+            const resultDiv = document.getElementById('trackingResult');
+            resultDiv.innerHTML = `
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 8px;">
+                        ${job.tracking_id}
+                    </div>
+                    <span class="status-badge status-${job.status}">${statusDisplay}</span>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <div class="job-info"><strong>Device:</strong> ${job.device_brand} ${job.device_model}</div>
+                    <div class="job-info"><strong>Issue:</strong> ${job.issue_description}</div>
+                    ${job.estimated_cost ? `<div class="job-info"><strong>Estimated Cost:</strong> ₹${job.estimated_cost}</div>` : ''}
+                    ${job.actual_cost ? `<div class="job-info"><strong>Actual Cost:</strong> ₹${job.actual_cost}</div>` : ''}
+                    ${job.notes ? `<div class="job-info"><strong>Notes:</strong> ${job.notes}</div>` : ''}
+                </div>
+
+                ${!isNotRepairable ? `
+                    <div class="card-title" style="margin-bottom: 16px;">Repair Progress</div>
+                    <div class="timeline">
+                        ${statuses.map((status, index) => `
+                            <div class="timeline-item ${index <= currentIndex ? 'active' : ''}">
+                                <div class="timeline-title">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+                                <div class="timeline-time">${index <= currentIndex ? '✓ Completed' : 'Pending'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `
+                    <div class="alert alert-info">
+                        Unfortunately, this device could not be repaired. Please contact us for more details.
+                    </div>
+                `}
+
+                ${(job.status === 'completed' || job.status === 'delivered') && (job.repair_image1 || job.repair_image2) ? `
+                    <div class="repair-images-label">Repair Completion Photos</div>
+                    <div class="repair-images">
+                        ${job.repair_image1 ? `<img src="${job.repair_image1}" class="repair-image" onclick="openLightbox('${job.repair_image1}')" alt="Repair Photo 1">` : ''}
+                        ${job.repair_image2 ? `<img src="${job.repair_image2}" class="repair-image" onclick="openLightbox('${job.repair_image2}')" alt="Repair Photo 2">` : ''}
+                    </div>
+                ` : ''}
+
+                ${(job.status === 'completed' || job.status === 'delivered') && job.actual_cost ? `
+                    <div class="payment-section">
+                        <div class="payment-title">Pay Online</div>
+                        <button class="btn-phonepe" onclick="payViaPhonePe(${job.actual_cost})">
+                            <span class="phonepe-icon">📱</span>
+                            <span>Pay ₹${job.actual_cost} via PhonePe</span>
+                        </button>
+                        <div class="payment-info">Secure UPI Payment • 9002031631-5@ybl</div>
+                    </div>
+                ` : ''}
+
+                <div style="margin-top: 24px;">
+                    <button class="btn btn-secondary" onclick="contactShop()">Contact Shop via WhatsApp</button>
+                </div>
+            `;
+        }
+
+        // Image Lightbox Functions
+        function openLightbox(imageSrc) {
+            const lightbox = document.createElement('div');
+            lightbox.className = 'image-lightbox';
+            lightbox.innerHTML = `
+                <div class="lightbox-content">
+                    <button class="lightbox-close" onclick="closeLightbox()">×</button>
+                    <img src="${imageSrc}" class="lightbox-image" alt="Repair Photo">
+                </div>
+            `;
+            lightbox.onclick = function (e) {
+                if (e.target === lightbox) {
+                    closeLightbox();
+                }
+            };
+            document.body.appendChild(lightbox);
+        }
+
+        function closeLightbox() {
+            const lightbox = document.querySelector('.image-lightbox');
+            if (lightbox) {
+                lightbox.remove();
+            }
+        }
+
+        // PhonePe Payment Function
+        function payViaPhonePe(amount) {
+            const upiId = '9002031631-5@ybl';
+            const name = 'CELL FIXER AR';
+            const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Mobile Repair Payment')}`;
+
+            // Try to open UPI app
+            window.location.href = upiUrl;
+
+            // Fallback: Show alert with UPI ID
+            setTimeout(() => {
+                alert(`PhonePe Payment\n\nUPI ID: ${upiId}\nAmount: ₹${amount}\n\nYou can also scan QR code or manually enter UPI ID in PhonePe app.`);
+            }, 1000);
+        }
+
+        function contactShop() {
+            const message = 'Hello! I would like to inquire about my repair status.';
+            const phone = WHATSAPP_NUMBER.replace(/[^0-9]/g, '');
+            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // ==================== UTILITIES ====================
+        function showAlert(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+
+</html>
